@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
+import axios from "axios";
 
 export const ProductList = ({
   allProducts,
@@ -8,18 +9,38 @@ export const ProductList = ({
   setCountProducts,
   total,
   setTotal,
-  articles,
 }) => {
-  const onAddProduct = (product) => {
-    if (allProducts.find((item) => item.id === product.id)) {
-      const products = allProducts.map((item) =>
-        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-      );
-      setTotal(total + product.price * product.quantity);
-      setCountProducts(countProducts + product.quantity);
-      toast.success("Producto agregado exitosamente", {
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    obtenerProductos();
+  }, []);
+
+  const obtenerProductos = async () => {
+    try {
+      const response = await axios.get("http://localhost:3020/product/obtener"); // Ruta a tu controlador backend para obtener los productos
+      setArticles(response.data);
+      const product=response.data.map
+      articles.map(article =>{
+        article.cantidad_producto = 1;
+      })
+      if (response.status === 200) {
+        toast.info("Productos obtenidos de la db exitosamente", {
+          position: "top-left",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al obtener los productos", {
         position: "top-left",
-        autoClose: 1000,
+        autoClose: 2000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -27,11 +48,37 @@ export const ProductList = ({
         progress: undefined,
         theme: "light",
       });
+    }
+  };
+
+  const addCart = ()=>{
+     toast.success("Producto agregado exitosamente", {
+          position: "top-left",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        
+      }
+  
+
+  const onAddProduct = (product) => {
+    if (allProducts.find((item) => item.id === product.id)) {
+      const products = allProducts.map((item) =>
+        item.id === product.id ? { ...item, cantidad_producto: item.cantidad_producto + 1 } : item
+      );
+      setTotal(total + product.precio* product.cantidad_producto);
+      setCountProducts(countProducts + product.cantidad_producto);
+     
       return setAllProducts([...products]);
     }
 
-    setTotal(total + product.price * product.quantity);
-    setCountProducts(countProducts + product.quantity);
+    setTotal(total + product.precio* product.cantidad_producto);
+    setCountProducts(countProducts + product.cantidad_producto);
     setAllProducts([...allProducts, product]);
   };
 
@@ -39,18 +86,21 @@ export const ProductList = ({
   let rolAdmin = localStorage.getItem("rolAdmin");
 
   return (
+
     <>
+    
       <div className="container-items">
         {articles.map((article) => (
-          <div className="item" key={article.id}>
+          <div className="item" key={article.id_producto}>
             <figure>
-              <img src={article.urlImage} alt={article.nameProduct} />
+              <img src={article.id_imagen} alt={article.nombre_producto} />
             </figure>
             <div className="info-product">
-              <h2>{article.nameProduct}</h2>
-              <p className="price">${article.price}</p>
+              <h2>{article.nombre_producto}</h2>
+              <p className="price">${article.precio}</p>
+              
               <div className="article-footer">
-                <span>{article.date} </span>
+                <span>{article.date} </span>  
                 <span>{article.ReadingTime}</span>
               </div>
               {rolAdmin === "rolAdmin" ? (
@@ -61,7 +111,7 @@ export const ProductList = ({
               ) : (
                 <>
                   <button
-                    onClick={() => onAddProduct(article)}
+                    onClick={() => onAddProduct(article,addCart())}
                     className="active:scale-95"
                   >
                     Añadir al carrito

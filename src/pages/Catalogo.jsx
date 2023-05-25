@@ -1,37 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import axios from "axios";
 import { Footer } from "../layouts/Footer/Footer.jsx";
 import { Header } from "../layouts/Header/Header.jsx";
 import "../assets/css/Catalogo.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { Cart } from "../Components/Cart";
-import { data } from "../data.js";
-import { ProductList } from "../Components/ProductList";
 import { HeaderCliente } from "../layouts/Header/HeaderCliente.jsx";
 import { NavLink, useNavigate } from "react-router-dom";
+import { ProductList } from "../Components/ProductList.jsx";
 
 export const Catalogo = () => {
   let rol = localStorage.getItem("rol");
   const [allProducts, setAllProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [countProducts, setCountProducts] = useState(0);
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    obtenerProductos();
+  }, []);
+
+  const obtenerProductos = async () => {
+    try {
+      const response = await axios.get("http://localhost:3020/product/obtener"); // Ruta a tu controlador backend para obtener los productos
+      setArticles(response.data);
+      articles.map(article =>{
+        article.cantidad = 1;
+      }
+      )
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al obtener los productos", {
+        position: "top-left",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    }
+  };
+
   AOS.init();
 
   const allCategories = [
     "All",
-    ...new Set(data.map((article) => article.category)),
+    ...new Set(articles.map((article) => article.categoria)),
   ];
 
   const [categories, setCategories] = useState(allCategories);
-  const [articles, setArticles] = useState(data);
+
   const filterCategory = (category) => {
     if (category === "All") {
-      setArticles(data);
+      setArticles(articles);
       return;
     }
 
-    const filteredData = data.filter(
-      (article) => article.category === category
+    const filteredData = articles.filter(
+      (article) => article.categoria === category
     );
     setArticles(filteredData);
   };
@@ -85,6 +115,7 @@ export const Catalogo = () => {
         </div>
       </main>
       <Footer />
+      <ToastContainer />
     </>
   );
 };
